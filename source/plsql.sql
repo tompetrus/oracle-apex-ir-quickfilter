@@ -14,34 +14,8 @@ BEGIN
       );
    END IF;
    
-   l_retval.javascript_function := 
-      'function(){
-         $("#apexir_WORKSHEET_REGION").bind("apexafterrefresh",
-            function(){
-            $("#apexir_SEARCHDROPROOT").removeAttr("onclick").click(
-                                  function(){
-                                     $.post("wwv_flow.show", 
-                                            {"p_request"           : "PLUGIN='||apex_plugin.get_ajax_identifier||'",
-                                             "p_flow_id"           : $v("pFlowId"),
-                                             "p_flow_step_id"      : $v("pFlowStepId"),
-                                             "p_instance"          : $v("pInstance"),
-                                             "x01"                 : $v("apexir_WORKSHEET_ID")
-                                             }, 
-                                             function(data, status, obj){
-                                                p = obj;
-                                                if(gReport){
-                                                   gReport.l_Action = "CONTROL";
-                                                   gReport.current_control = "SEARCH_COLUMN";
-                                                   gReport._Return(obj);
-                                                };
-                                             }
-                                           );
-                                
-                                  return false;
-                               });}
-                 );
-                 $("#apexir_WORKSHEET_REGION").trigger("apexafterrefresh");}';
-
+   l_retval.javascript_function := 'function(){ apex.custom.plugin.irQuickFilter(this.affectedElements,"'||apex_plugin.get_ajax_identifier||'");}';
+   
    RETURN l_retval;
 END;
 FUNCTION apex_ir_get_columns (
@@ -50,11 +24,10 @@ FUNCTION apex_ir_get_columns (
 )
    RETURN APEX_PLUGIN.T_DYNAMIC_ACTION_AJAX_RESULT
 IS
-   lv_json CLOB;
-   l_ir_base_id NUMBER(20) := apex_application.g_x01;
+  c sys_refcursor;
+  l_ir_base_id NUMBER(20) := apex_application.g_x01;
 BEGIN
-
-apex_util.json_from_sql(q'!
+  open c for 
    select 'All columns' D, '0' R, '0' C
      from dual
     union all
@@ -62,8 +35,12 @@ apex_util.json_from_sql(q'!
      from apex_application_page_ir_col 
     where application_id = :APP_ID
       and page_id = :APP_PAGE_ID
-      and interactive_report_id = !' ||l_ir_base_id
-);
+      and display_text_as != 'HIDDEN'
+      and interactive_report_id = l_ir_base_id;
 
+  apex_json.open_object;
+  apex_json. write('row', c);
+  apex_json.close_object;
+  
    RETURN NULL;
 END;

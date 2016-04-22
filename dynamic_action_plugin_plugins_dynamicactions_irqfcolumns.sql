@@ -1,173 +1,181 @@
-set define off
-set verify off
-set feedback off
-WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
-begin wwv_flow.g_import_in_progress := true; end; 
-/
- 
---       AAAA       PPPPP   EEEEEE  XX      XX
---      AA  AA      PP  PP  EE       XX    XX
---     AA    AA     PP  PP  EE        XX  XX
---    AAAAAAAAAA    PPPPP   EEEE       XXXX
---   AA        AA   PP      EE        XX  XX
---  AA          AA  PP      EE       XX    XX
---  AA          AA  PP      EEEEEE  XX      XX
-prompt  Set Credentials...
- 
-begin
- 
-  -- Assumes you are running the script connected to SQL*Plus as the Oracle user APEX_040100 or as the owner (parsing schema) of the application.
-  wwv_flow_api.set_security_group_id(p_security_group_id=>nvl(wwv_flow_application_install.get_workspace_id,1377027056414870));
- 
-end;
-/
-
-begin wwv_flow.g_import_in_progress := true; end;
-/
-begin 
-
-select value into wwv_flow_api.g_nls_numeric_chars from nls_session_parameters where parameter='NLS_NUMERIC_CHARACTERS';
-
-end;
-
-/
-begin execute immediate 'alter session set nls_numeric_characters=''.,''';
-
-end;
-
-/
-begin wwv_flow.g_browser_language := 'en'; end;
-/
-prompt  Check Compatibility...
- 
-begin
- 
--- This date identifies the minimum version required to import this file.
-wwv_flow_api.set_version(p_version_yyyy_mm_dd=>'2011.02.12');
- 
-end;
-/
-
-prompt  Set Application ID...
- 
-begin
- 
-   -- SET APPLICATION ID
-   wwv_flow.g_flow_id := nvl(wwv_flow_application_install.get_application_id,130);
-   wwv_flow_api.g_id_offset := nvl(wwv_flow_application_install.get_offset,0);
-null;
- 
-end;
-/
-
-prompt  ...plugins
+set define off verify off feedback off
+whenever sqlerror exit sql.sqlcode rollback
+--------------------------------------------------------------------------------
 --
---application/shared_components/plugins/dynamic_action/plugins_dynamicactions_irqfcolumns
- 
+-- ORACLE Application Express (APEX) export file
+--
+-- You should run the script connected to SQL*Plus as the Oracle user
+-- APEX_050000 or as the owner (parsing schema) of the application.
+--
+-- NOTE: Calls to apex_application_install override the defaults below.
+--
+--------------------------------------------------------------------------------
 begin
- 
-wwv_flow_api.create_plugin (
-  p_id => 436165710917776375 + wwv_flow_api.g_id_offset
- ,p_flow_id => wwv_flow.g_flow_id
- ,p_plugin_type => 'DYNAMIC ACTION'
- ,p_name => 'PLUGINS.DYNAMICACTIONS.IRQFCOLUMNS'
- ,p_display_name => 'IR Quick Filter All Columns'
- ,p_category => 'INIT'
- ,p_image_prefix => '#PLUGIN_PREFIX#'
- ,p_plsql_code => 
-'FUNCTION apex_ir_get_qf_columns('||unistr('\000a')||
-'    p_dynamic_action IN apex_plugin.t_dynamic_action,'||unistr('\000a')||
-'    p_plugin         IN apex_plugin.t_plugin )'||unistr('\000a')||
-'RETURN apex_plugin.t_dynamic_action_render_result'||unistr('\000a')||
-'IS'||unistr('\000a')||
-'   l_retval APEX_PLUGIN.T_DYNAMIC_ACTION_RENDER_RESULT;'||unistr('\000a')||
-'   l_dateformat  VARCHAR2(20);'||unistr('\000a')||
-'BEGIN'||unistr('\000a')||
-'   IF apex_application.g_debug'||unistr('\000a')||
-'   THEN'||unistr('\000a')||
-'      apex_plugin_util.debug_dynamic_action('||unistr('\000a')||
-'         p_plugin         => p_plugi'||
-'n,'||unistr('\000a')||
-'         p_dynamic_action => p_dynamic_action '||unistr('\000a')||
-'      );'||unistr('\000a')||
-'   END IF;'||unistr('\000a')||
-'   '||unistr('\000a')||
-'   l_retval.javascript_function := '||unistr('\000a')||
-'      ''function(){'||unistr('\000a')||
-'         $("#apexir_WORKSHEET_REGION").bind("apexafterrefresh",'||unistr('\000a')||
-'            function(){'||unistr('\000a')||
-'            $("#apexir_SEARCHDROPROOT").removeAttr("onclick").click('||unistr('\000a')||
-'                                  function(){'||unistr('\000a')||
-'                                     $.post("wwv_flow.show", '||unistr('\000a')||
-'      '||
-'                                      {"p_request"           : "PLUGIN=''||apex_plugin.get_ajax_identifier||''",'||unistr('\000a')||
-'                                             "p_flow_id"           : $v("pFlowId"),'||unistr('\000a')||
-'                                             "p_flow_step_id"      : $v("pFlowStepId"),'||unistr('\000a')||
-'                                             "p_instance"          : $v("pInstance"),'||unistr('\000a')||
-'                               '||
-'              "x01"                 : $v("apexir_WORKSHEET_ID")'||unistr('\000a')||
-'                                             }, '||unistr('\000a')||
-'                                             function(data, status, obj){'||unistr('\000a')||
-'                                                p = obj;'||unistr('\000a')||
-'                                                if(gReport){'||unistr('\000a')||
-'                                                   gReport.l_Action = "CONTROL";'||unistr('\000a')||
-'              '||
-'                                     gReport.current_control = "SEARCH_COLUMN";'||unistr('\000a')||
-'                                                   gReport._Return(obj);'||unistr('\000a')||
-'                                                };'||unistr('\000a')||
-'                                             }'||unistr('\000a')||
-'                                           );'||unistr('\000a')||
-'                                '||unistr('\000a')||
-'                                  return false;'||unistr('\000a')||
-'                      '||
-'         });}'||unistr('\000a')||
-'                 );'||unistr('\000a')||
-'                 $("#apexir_WORKSHEET_REGION").trigger("apexafterrefresh");}'';'||unistr('\000a')||
-''||unistr('\000a')||
-'   RETURN l_retval;'||unistr('\000a')||
-'END;'||unistr('\000a')||
-'FUNCTION apex_ir_get_columns ('||unistr('\000a')||
-'   p_dynamic_action IN apex_plugin.t_dynamic_action,'||unistr('\000a')||
-'   p_plugin         IN apex_plugin.t_plugin'||unistr('\000a')||
-')'||unistr('\000a')||
-'   RETURN APEX_PLUGIN.T_DYNAMIC_ACTION_AJAX_RESULT'||unistr('\000a')||
-'IS'||unistr('\000a')||
-'   lv_json CLOB;'||unistr('\000a')||
-'   l_ir_base_id NUMBER(20) := apex_application.g_x01;'||unistr('\000a')||
-'BEGIN'||unistr('\000a')||
-''||
-''||unistr('\000a')||
-'apex_util.json_from_sql(q''!'||unistr('\000a')||
-'   select ''All columns'' D, ''0'' R, ''0'' C'||unistr('\000a')||
-'     from dual'||unistr('\000a')||
-'    union all'||unistr('\000a')||
-'   select sys.htf.escape_sc(report_label) D, column_alias R, ''1'' C'||unistr('\000a')||
-'     from apex_application_page_ir_col '||unistr('\000a')||
-'    where application_id = :APP_ID'||unistr('\000a')||
-'      and page_id = :APP_PAGE_ID'||unistr('\000a')||
-'      and interactive_report_id = !'' ||l_ir_base_id'||unistr('\000a')||
-');'||unistr('\000a')||
-''||unistr('\000a')||
-'   RETURN NULL;'||unistr('\000a')||
-'END;'
- ,p_render_function => 'apex_ir_get_qf_columns'
- ,p_ajax_function => 'apex_ir_get_columns'
- ,p_standard_attributes => 'ONLOAD'
- ,p_substitute_attributes => true
- ,p_version_identifier => '1.0'
- ,p_about_url=>'https://github.com/tompetrus/oracle-apex-ir-quickfilter'
- ,p_plugin_comment=>'Author: Tom Petrus, 2014'
-  );
+wwv_flow_api.import_begin (
+ p_version_yyyy_mm_dd=>'2013.01.01'
+,p_release=>'5.0.3.00.03'
+,p_default_workspace_id=>27000294100083787867
+,p_default_application_id=>90922
+,p_default_owner=>'TPE'
+);
+end;
+/
+prompt --application/ui_types
+begin
 null;
- 
 end;
 /
-
+prompt --application/shared_components/plugins/dynamic_action/plugins_dynamicactions_irqfcolumns
+begin
+wwv_flow_api.create_plugin(
+ p_id=>wwv_flow_api.id(99459134417296112655)
+,p_plugin_type=>'DYNAMIC ACTION'
+,p_name=>'PLUGINS.DYNAMICACTIONS.IRQFCOLUMNS'
+,p_display_name=>'IR Quick Filter All Columns (APEX 5+)'
+,p_category=>'INIT'
+,p_supported_ui_types=>'DESKTOP'
+,p_javascript_file_urls=>'#PLUGIN_FILES#apex.custom.plugin.irQuickFilter#MIN#.js'
+,p_plsql_code=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+'FUNCTION apex_ir_get_qf_columns(',
+'    p_dynamic_action IN apex_plugin.t_dynamic_action,',
+'    p_plugin         IN apex_plugin.t_plugin )',
+'RETURN apex_plugin.t_dynamic_action_render_result',
+'IS',
+'   l_retval APEX_PLUGIN.T_DYNAMIC_ACTION_RENDER_RESULT;',
+'   l_dateformat  VARCHAR2(20);',
+'BEGIN',
+'   IF apex_application.g_debug',
+'   THEN',
+'      apex_plugin_util.debug_dynamic_action(',
+'         p_plugin         => p_plugin,',
+'         p_dynamic_action => p_dynamic_action ',
+'      );',
+'   END IF;',
+'   ',
+'   l_retval.javascript_function := ''function(){ apex.custom.plugin.irQuickFilter(this.affectedElements,"''||apex_plugin.get_ajax_identifier||''");}'';',
+'   ',
+'   RETURN l_retval;',
+'END;',
+'FUNCTION apex_ir_get_columns (',
+'   p_dynamic_action IN apex_plugin.t_dynamic_action,',
+'   p_plugin         IN apex_plugin.t_plugin',
+')',
+'   RETURN APEX_PLUGIN.T_DYNAMIC_ACTION_AJAX_RESULT',
+'IS',
+'  c sys_refcursor;',
+'  l_ir_base_id NUMBER(20) := apex_application.g_x01;',
+'BEGIN',
+'  open c for ',
+'   select ''All columns'' D, ''0'' R, ''0'' C',
+'     from dual',
+'    union all',
+'   select sys.htf.escape_sc(report_label) D, column_alias R, ''1'' C',
+'     from apex_application_page_ir_col ',
+'    where application_id = :APP_ID',
+'      and page_id = :APP_PAGE_ID',
+'      and display_text_as != ''HIDDEN''',
+'      and interactive_report_id = l_ir_base_id;',
+'',
+'  apex_json.open_object;',
+'  apex_json. write(''row'', c);',
+'  apex_json.close_object;',
+'  ',
+'   RETURN NULL;',
+'END;'))
+,p_render_function=>'apex_ir_get_qf_columns'
+,p_ajax_function=>'apex_ir_get_columns'
+,p_standard_attributes=>'REGION:ONLOAD'
+,p_substitute_attributes=>true
+,p_subscribe_plugin_settings=>true
+,p_help_text=>wwv_flow_utilities.join(wwv_flow_t_varchar2(
+'When using the column dropdown next to the search-input on an interactive report, by default only the currently displayed columns are available. This plugin hacks into the interactive report JavaScript to hijack the calls to retrieve the columns, and'
+||' instead returns all the columns available to the user - in other words, the columns available in the "select columns" action.',
+'',
+'To use:',
+'1) install the plugin in the shared components of your application',
+'2) create a dynamic action on the page of type "Page Load"',
+'3) as a true action, select the "ir Quick Filter" action, found under "Initialize"',
+'4)  then select the affected region. You can create multiple true actions for different regions (ir''s), so multiple IR''s are supported.'))
+,p_version_identifier=>'2.0'
+,p_about_url=>'https://github.com/tompetrus/oracle-apex-ir-quickfilter'
+,p_plugin_comment=>'Author: Tom Petrus, 2016'
+,p_files_version=>7
+);
+end;
+/
+begin
+wwv_flow_api.g_varchar2_table := wwv_flow_api.empty_varchar2_table;
+wwv_flow_api.g_varchar2_table(1) := '696620282021617065782E637573746F6D2029207B20617065782E637573746F6D203D207B7D3B207D3B0D0A696620282021617065782E637573746F6D2E706C7567696E2029207B20617065782E637573746F6D2E706C7567696E203D207B7D3B207D3B';
+wwv_flow_api.g_varchar2_table(2) := '0D0A0D0A617065782E637573746F6D2E706C7567696E2E6972517569636B46696C746572203D0D0A66756E6374696F6E2870456C656D656E74732C2070416A61784964656E746966696572297B0D0A20202F2F6368616E676520636F6C756D6E2064726F';
+wwv_flow_api.g_varchar2_table(3) := '70646F776E20666F72206F6E6520495220726567696F6E0D0A202066756E6374696F6E206368616E67654972436F6C756D6E44726F702870526567696F6E4964297B0D0A20202020617065782E64656275672822504C5547494E2D5146202E2E2E207374';
+wwv_flow_api.g_varchar2_table(4) := '617469632069643A2022202B2070526567696F6E4964293B0D0A2020202076617220726567696F6E24203D20617065782E6A5175657279282223222B70526567696F6E4964292C0D0A2020202020202020697224203D20617065782E6A51756572792822';
+wwv_flow_api.g_varchar2_table(5) := '23222B70526567696F6E49642B225F697222292C0D0A202020202020202064726F7024203D20617065782E6A5175657279282223222B70526567696F6E49642B225F636F6C756D6E5F7365617263685F64726F7022293B0D0A20202020202020200D0A20';
+wwv_flow_api.g_varchar2_table(6) := '202020617065782E64656275672822504C5547494E2D5146202E2E2E20495220726567696F6E3A20222C20697224293B0D0A20202020726567696F6E242E6F6E282261706578616674657272656672657368222C2066756E6374696F6E28297B0D0A2020';
+wwv_flow_api.g_varchar2_table(7) := '20202020617065782E64656275672822504C5547494E2D5146202E2E2E204166746572207265706F72742072656672657368202D207265696E697469616C697A696E6720495220717569636B2066696C746572206F6E20222C2070526567696F6E496429';
+wwv_flow_api.g_varchar2_table(8) := '3B0D0A2020202020207661722078203D206972242E646174612822617065782D696E7465726163746976655265706F727422293B0D0A20202020202064726F70242E6D656E75282264657374726F7922293B0D0A20202020202064726F70242E6D656E75';
+wwv_flow_api.g_varchar2_table(9) := '28207B0D0A20202020202020206173796E6346657463684D656E753A2066756E6374696F6E286D656E752C2063616C6C6261636B29207B0D0A20202020202020202020782E7365617263684D656E75203D206D656E753B0D0A2020202020202020202078';
+wwv_flow_api.g_varchar2_table(10) := '2E7365617263684D656E7543616C6C6261636B203D2063616C6C6261636B3B0D0A20202020202020202020782E5F6469616C6F67526573657428293B0D0A20202020202020202020782E63757272656E74416374696F6E203D2022434F4E54524F4C223B';
+wwv_flow_api.g_varchar2_table(11) := '0D0A20202020202020202020782E63757272656E74436F6E74726F6C3D20225345415243485F434F4C554D4E220D0A0D0A20202020202020202020617065782E64656275672822504C5547494E2D5146202E2E2E207374617274206665746368206F6620';
+wwv_flow_api.g_varchar2_table(12) := '6D656E75206974656D732E2E2E22293B0D0A20202020202020202020617065782E7365727665722E706C7567696E2870416A61784964656E7469666965720D0A202020202020202020202C207B7830313A20782E776F726B736865657449647D0D0A2020';
+wwv_flow_api.g_varchar2_table(13) := '20202020202020202C207B2064617461547970653A202274657874220D0A2020202020202020202020202C20737563636573733A2066756E6374696F6E287044617461297B200D0A20202020202020202020202020202020617065782E64656275672822';
+wwv_flow_api.g_varchar2_table(14) := '504C5547494E2D5146202E2E2E205375636365737366756C6C206665746368206F66206974656D732C207061727365207468656D2028696E7465726E616C2922293B0D0A20202020202020202020202020202020782E5F636F6C756D6E53656172636853';
+wwv_flow_api.g_varchar2_table(15) := '686F772E63616C6C28782C207044617461293B0D0A20202020202020202020202020207D200D0A2020202020202020202020202C20636F6D706C6574653A2066756E6374696F6E28297B0D0A202020202020202020202020202020206966202820782E73';
+wwv_flow_api.g_varchar2_table(16) := '65617263684D656E7543616C6C6261636B20297B0D0A202020202020202020202020202020202020617065782E64656275672822504C5547494E2D5146202E2E2E2043616C6C6261636B206661696C656422293B0D0A2020202020202020202020202020';
+wwv_flow_api.g_varchar2_table(17) := '20202020782E7365617263684D656E7543616C6C6261636B2866616C7365293B0D0A202020202020202020202020202020202020782E7365617263684D656E7543616C6C6261636B203D206E756C6C3B0D0A202020202020202020202020202020202020';
+wwv_flow_api.g_varchar2_table(18) := '782E7365617263684D656E75203D206E756C6C3B20200D0A202020202020202020202020202020207D3B0D0A20202020202020202020202020207D0D0A2020202020202020202020207D0D0A20202020202020202020293B0D0A20202020202020207D2C';
+wwv_flow_api.g_varchar2_table(19) := '0D0A20202020202020206166746572436C6F73653A2066756E6374696F6E28206576656E742C20646174612029207B0D0A202020202020202020206966202820646174612E616374696F6E54616B656E2029207B200D0A20202020202020202020202020';
+wwv_flow_api.g_varchar2_table(20) := '2073657454696D656F75742866756E6374696F6E2829207B0D0A202020202020202020202020202020202020782E5F676574456C656D656E742820227365617263685F6669656C642220292E666F63757328293B0D0A2020202020202020202020202020';
+wwv_flow_api.g_varchar2_table(21) := '7D2C20313030293B0D0A202020202020202020207D0D0A20202020202020207D2C0D0A20202020202020206974656D733A205B5D0D0A2020202020207D293B0D0A202020207D293B0D0A20202020726567696F6E242E7472696767657228226170657861';
+wwv_flow_api.g_varchar2_table(22) := '667465727265667265736822293B0D0A20207D3B0D0A20202F2F6D61696E20636F64650D0A2020617065782E64656275672822504C5547494E2D5146202E2E2E206166666563746564456C656D656E74733A20222C2070456C656D656E7473293B0D0A20';
+wwv_flow_api.g_varchar2_table(23) := '202F2F6966206E6F20616666656374656420656C656D656E7420686173206265656E2073706563696669656420617065782070617373657320616C6F6E672074686520646F63756D656E74206E6F64650D0A2020696620282070456C656D656E74735B30';
+wwv_flow_api.g_varchar2_table(24) := '5D2E6E6F64654E616D65203D3D3D202223646F63756D656E74222029207B0D0A20202020617065782E64656275672822504C5547494E2D5146202E2E2E206E6F206166666563746564456C656D656E74207761732061737369676E65642E20417474656D';
+wwv_flow_api.g_varchar2_table(25) := '7074696E6720746F20726574726965766520616C6C20495220726567696F6E7320627920636C617373202D20617373756D696E6720556E6976657273616C205468656D652122293B0D0A20202020617065782E6A517565727928222E742D4952522D7265';
+wwv_flow_api.g_varchar2_table(26) := '67696F6E22292E656163682866756E6374696F6E28297B0D0A2020202020206368616E67654972436F6C756D6E44726F7028746869732E6964293B0D0A202020207D293B0D0A20207D20656C7365207B0D0A202020206368616E67654972436F6C756D6E';
+wwv_flow_api.g_varchar2_table(27) := '44726F702870456C656D656E74735B305D2E6964293B0D0A20207D3B0D0A7D3B';
+null;
+end;
+/
+begin
+wwv_flow_api.create_plugin_file(
+ p_id=>wwv_flow_api.id(31175671676597299340)
+,p_plugin_id=>wwv_flow_api.id(99459134417296112655)
+,p_file_name=>'apex.custom.plugin.irQuickFilter.js'
+,p_mime_type=>'application/javascript'
+,p_file_charset=>'utf-8'
+,p_file_content=>wwv_flow_api.varchar2_to_blob(wwv_flow_api.g_varchar2_table)
+);
+end;
+/
+begin
+wwv_flow_api.g_varchar2_table := wwv_flow_api.empty_varchar2_table;
+wwv_flow_api.g_varchar2_table(1) := '617065782E637573746F6D7C7C28617065782E637573746F6D3D7B7D292C617065782E637573746F6D2E706C7567696E7C7C28617065782E637573746F6D2E706C7567696E3D7B7D292C617065782E637573746F6D2E706C7567696E2E6972517569636B';
+wwv_flow_api.g_varchar2_table(2) := '46696C7465723D66756E6374696F6E28652C61297B66756E6374696F6E206E2865297B766172206E3D617065782E6A5175657279282223222B65292C633D617065782E6A5175657279282223222B652B225F697222292C743D617065782E6A5175657279';
+wwv_flow_api.g_varchar2_table(3) := '282223222B652B225F636F6C756D6E5F7365617263685F64726F7022293B6E2E6F6E282261706578616674657272656672657368222C66756E6374696F6E28297B76617220653D632E646174612822617065782D696E7465726163746976655265706F72';
+wwv_flow_api.g_varchar2_table(4) := '7422293B742E6D656E75282264657374726F7922292C742E6D656E75287B6173796E6346657463684D656E753A66756E6374696F6E286E2C63297B652E7365617263684D656E753D6E2C652E7365617263684D656E7543616C6C6261636B3D632C652E5F';
+wwv_flow_api.g_varchar2_table(5) := '6469616C6F67526573657428292C652E63757272656E74416374696F6E3D22434F4E54524F4C222C652E63757272656E74436F6E74726F6C3D225345415243485F434F4C554D4E222C617065782E7365727665722E706C7567696E28612C7B7830313A65';
+wwv_flow_api.g_varchar2_table(6) := '2E776F726B736865657449647D2C7B64617461547970653A2274657874222C737563636573733A66756E6374696F6E2861297B652E5F636F6C756D6E53656172636853686F772E63616C6C28652C61297D2C636F6D706C6574653A66756E6374696F6E28';
+wwv_flow_api.g_varchar2_table(7) := '297B652E7365617263684D656E7543616C6C6261636B262628652E7365617263684D656E7543616C6C6261636B282131292C652E7365617263684D656E7543616C6C6261636B3D6E756C6C2C652E7365617263684D656E753D6E756C6C297D7D297D2C61';
+wwv_flow_api.g_varchar2_table(8) := '66746572436C6F73653A66756E6374696F6E28612C6E297B6E2E616374696F6E54616B656E262673657454696D656F75742866756E6374696F6E28297B652E5F676574456C656D656E7428227365617263685F6669656C6422292E666F63757328297D2C';
+wwv_flow_api.g_varchar2_table(9) := '313030297D2C6974656D733A5B5D7D297D292C6E2E7472696767657228226170657861667465727265667265736822297D2223646F63756D656E74223D3D3D655B305D2E6E6F64654E616D653F617065782E6A517565727928222E742D4952522D726567';
+wwv_flow_api.g_varchar2_table(10) := '696F6E22292E656163682866756E6374696F6E28297B6E28746869732E6964297D293A6E28655B305D2E6964297D3B';
+null;
+end;
+/
+begin
+wwv_flow_api.create_plugin_file(
+ p_id=>wwv_flow_api.id(31175676297272300123)
+,p_plugin_id=>wwv_flow_api.id(99459134417296112655)
+,p_file_name=>'apex.custom.plugin.irQuickFilter.min.js'
+,p_mime_type=>'application/javascript'
+,p_file_charset=>'utf-8'
+,p_file_content=>wwv_flow_api.varchar2_to_blob(wwv_flow_api.g_varchar2_table)
+);
+end;
+/
+begin
+wwv_flow_api.import_end(p_auto_install_sup_obj => nvl(wwv_flow_application_install.get_auto_install_sup_obj, false), p_is_component_import => true);
 commit;
-begin 
-execute immediate 'begin dbms_session.set_nls( param => ''NLS_NUMERIC_CHARACTERS'', value => '''''''' || replace(wwv_flow_api.g_nls_numeric_chars,'''''''','''''''''''') || ''''''''); end;';
 end;
 /
-set verify on
-set feedback on
+set verify on feedback on define on
 prompt  ...done
