@@ -155,6 +155,8 @@ wwv_flow_api.create_plugin (
  ,p_standard_attributes => 'ONLOAD'
  ,p_substitute_attributes => true
  ,p_version_identifier => '1.0'
+ ,p_about_url=>'https://github.com/tompetrus/oracle-apex-ir-quickfilter'
+ ,p_plugin_comment=>'Author: Tom Petrus, 2014'
   );
 null;
  
